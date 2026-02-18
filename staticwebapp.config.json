@@ -1,6 +1,6 @@
 {
   "auth": {
-    "rolesSource": "none",
+    "rolesSource": "DEFAULT",
     "identityProviders": {
       "azureActiveDirectory": {
         "registration": {
