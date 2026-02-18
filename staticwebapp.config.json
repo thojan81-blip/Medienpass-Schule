@@ -1,0 +1,24 @@
+{
+  "auth": {
+    "rolesSource": "none",
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "openIdConnectConfigurationEndpoint": "[https://login.microsoftonline.com/09c4bd58-1b8c-410d-930e-816015e61028/v2.0/.well-known/openid-configuration](https://login.microsoftonline.com/DEINE_TENANT_ID/v2.0/.well-known/openid-configuration)"
+        }
+      }
+    }
+  },
+  "routes": [
+    {
+      "route": "/*",
+      "allowedRoles": ["authenticated"]
+    }
+  ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad",
+      "statusCode": 302
+    }
+  }
+}
