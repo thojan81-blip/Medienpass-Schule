@@ -40,15 +40,16 @@
         // --- Firebase Initialisierung ---
         // HINWEIS: Füge hier deine Firebase-Projektdaten ein, um die Speicherung zu aktivieren.
         const firebaseConfig = {
-            apiKey: "", 
-            authDomain: "",
-            projectId: "",
-            storageBucket: "",
-            messagingSenderId: "",
-            appId: ""
+          apiKey: "AIzaSyBk62NVhidTupvGKt9Sicnzs2YeMJCY4xM",
+          authDomain: "medienpass-thomaeum-e6bd7.firebaseapp.com",
+          projectId: "medienpass-thomaeum-e6bd7",
+          storageBucket: "medienpass-thomaeum-e6bd7.firebasestorage.app",
+          messagingSenderId: "708823428839",
+          appId: "1:708823428839:web:212f513020a6fdfbcdfc42",
+          measurementId: "G-SMZBMCK3TV"
         };
-
-        let db = null;
+        
+         let db = null;
         if (firebaseConfig.apiKey) {
             try {
                 firebase.initializeApp(firebaseConfig);
