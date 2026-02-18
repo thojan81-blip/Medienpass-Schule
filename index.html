@@ -65,7 +65,7 @@
             <i data-lucide={name} className={className} style={{ width: size, height: size, display: 'inline-block' }}></i>
         );
 
-        // Lehrplan-Daten
+        // Vollständige Lehrplan-Daten
         const curriculumData = {
             "5-6": {
                 title: "Basis-Stufe",
@@ -79,20 +79,48 @@
                         { q: "Warum nutzen wir Ordner?", a: ["PC wird schneller", "Ordnung & Finden", "Gegen Viren"], correct: 1 },
                         { q: "Sinnvoller Dateiname?", a: ["hausaufgabe.pdf", "2025_Bio_Referat_Max.pdf", "Unbenannt.pdf"], correct: 1 }
                     ]},
+                    { id: 3, category: "Anwendung", title: "Textverarbeitung I", desc: "Dokumente formatieren.", quiz: [
+                        { q: "Wie macht man Text 'fett'?", a: ["Markieren + 'B' Symbol", "Laut lesen", "Kleiner machen"], correct: 0 },
+                        { q: "Was ist ein Vorteil von PDF?", a: ["Nicht lesbar", "Sieht überall gleich aus", "Kein Strom"], correct: 1 }
+                    ]},
                     { id: 4, category: "Umgang", title: "Netiquette", desc: "Regeln für den Klassenchat.", quiz: [
                         { q: "Was bedeuten GROSSBUCHSTABEN?", a: ["Wichtiger Text", "Schreien", "Tastaturfehler"], correct: 1 },
                         { q: "Fotos ungefragt posten?", a: ["Ja, wenn lustig", "Nein, verletzt Rechte", "Nur in Gruppen"], correct: 1 }
+                    ]},
+                    { id: 5, category: "Umgang", title: "Mobbing-Prävention", desc: "Grenzen im Netz verstehen.", quiz: [
+                        { q: "Was tun bei Online-Beleidigungen?", a: ["Gleich zurückbeleidigen", "Screenshot machen & Hilfe holen", "Account sofort löschen"], correct: 1 },
+                        { q: "Wem sollte man Online-Probleme melden?", a: ["Niemandem", "Eltern oder Lehrkräften", "Fremden im Internet"], correct: 1 }
+                    ]},
+                    { id: 6, category: "Umgang", title: "Suchmaschinen", desc: "Sichere Recherchequellen.", quiz: [
+                        { q: "Welche Suche ist für Kinder?", a: ["FragFinn.de", "Amazon.de", "Google Bilder"], correct: 0 },
+                        { q: "Gute Suchbegriffe sind...", a: ["Ganze Sätze", "Präzise Stichwörter", "Nur ein Buchstabe"], correct: 1 }
                     ]}
                 ]
             },
-            "7-8": { title: "Aufbau-Stufe", color: "indigo", tasks: [
-                { id: 7, category: "Anwendung", title: "Präsentationen", desc: "Design & Mediennutzung." },
-                { id: 11, category: "Umgang", title: "Fake News Check", desc: "Quellen kritisch prüfen." }
-            ]},
-            "9-10": { title: "Profi-Stufe", color: "purple", tasks: [
-                { id: 13, category: "Anwendung", title: "KI-Nutzung", desc: "Prompts & Evaluation." },
-                { id: 16, category: "Umgang", title: "KI-Ethik", desc: "Grenzen & Verantwortung." }
-            ]}
+            "7-8": {
+                title: "Aufbau-Stufe",
+                color: "indigo",
+                tasks: [
+                    { id: 7, category: "Anwendung", title: "Präsentationen", desc: "Design & Mediennutzung." },
+                    { id: 8, category: "Anwendung", title: "Bild- & Videobearbeitung", desc: "Einfache Schnitte & Filter." },
+                    { id: 9, category: "Anwendung", title: "Tabellenkalkulation", desc: "Daten grafisch aufbereiten." },
+                    { id: 10, category: "Umgang", title: "Urheberrecht", desc: "CC-Lizenzen & Bildrechte." },
+                    { id: 11, category: "Umgang", title: "Fake News Check", desc: "Quellen kritisch prüfen." },
+                    { id: 12, category: "Umgang", title: "Datenschutz", desc: "Social Media Einstellungen." }
+                ]
+            },
+            "9-10": {
+                title: "Profi-Stufe",
+                color: "purple",
+                tasks: [
+                    { id: 13, category: "Anwendung", title: "KI-Nutzung", desc: "Prompts & Evaluation." },
+                    { id: 14, category: "Anwendung", title: "Digitale Bewerbung", desc: "E-Portfolio erstellen." },
+                    { id: 15, category: "Anwendung", title: "Projekt-Tools", desc: "Kollaboratives Arbeiten." },
+                    { id: 16, category: "Umgang", title: "KI-Ethik", desc: "Grenzen & Verantwortung." },
+                    { id: 17, category: "Umgang", title: "Hate Speech", desc: "Gegenrede & Zivilcourage." },
+                    { id: 18, category: "Umgang", title: "Digitaler Fußabdruck", desc: "Folgen reflektieren." }
+                ]
+            }
         };
 
         const App = () => {
@@ -105,8 +133,8 @@
             const [quizStep, setQuizStep] = useState(0);
             const [quizError, setQuizError] = useState(false);
             const [teacherCode, setTeacherCode] = useState("");
+            const [allStudents, setAllStudents] = useState([]);
 
-            // Azure Auth & Firestore Sync
             useEffect(() => {
                 fetch('/.auth/me')
                     .then(res => res.json())
@@ -124,7 +152,17 @@
                 }
             }, [msUser.userId]);
 
-            // Icons nach jedem Render aktualisieren
+            // Dashboard Daten laden für Lehrer
+            useEffect(() => {
+                if (db && viewMode === 'teacher') {
+                    const collPath = `artifacts/${appId}/public/data/progress`;
+                    const unsubscribe = db.collection(collPath).onSnapshot(snap => {
+                        setAllStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                    });
+                    return () => unsubscribe();
+                }
+            }, [viewMode]);
+
             useEffect(() => { if (window.lucide) lucide.createIcons(); });
 
             const toggleTask = async (id) => {
@@ -138,7 +176,7 @@
                         const payload = { 
                             completedTasks: nextTasks, 
                             userDetails: msUser.userDetails,
-                            progress: Math.round((nextTasks.length / 12) * 100),
+                            progress: Math.round((nextTasks.length / 18) * 100),
                             lastUpdated: new Date().toISOString()
                         };
                         const userDoc = db.doc(`artifacts/${appId}/users/${msUser.userId}/settings/profile`);
@@ -176,7 +214,7 @@
                 }
             };
 
-            const progress = Math.round((completedTasks.length / 12) * 100);
+            const progress = Math.round((completedTasks.length / 18) * 100);
 
             return (
                 <div className="flex flex-col min-h-screen">
@@ -205,7 +243,7 @@
                                                 <div className="bg-blue-500 h-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
                                             </div>
                                         </div>
-                                        {isSyncing && <p className="text-[10px] text-blue-400 font-bold uppercase mt-4">● Daten werden synchronisiert...</p>}
+                                        {isSyncing && <p className="text-[10px] text-blue-400 font-bold uppercase mt-4 animate-pulse">● Daten werden synchronisiert...</p>}
                                     </div>
                                     <Icon name="award" size={300} className="absolute -right-10 -bottom-10 opacity-5" />
                                 </div>
@@ -218,17 +256,44 @@
                                     ))}
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {curriculumData[activeStage].tasks.map(t => (
-                                        <div key={t.id} onClick={() => handleTaskClick(t)} className={`p-8 rounded-[2rem] border-2 cursor-pointer transition-all flex gap-6 items-start ${completedTasks.includes(t.id) ? 'border-blue-500 bg-white shadow-xl shadow-blue-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
-                                            <Icon name={completedTasks.includes(t.id) ? "check-circle" : "circle"} className={completedTasks.includes(t.id) ? "text-blue-600" : "text-slate-200"} size={32} />
-                                            <div>
-                                                <h4 className={`font-black text-xl mb-1 ${completedTasks.includes(t.id) ? 'text-slate-800' : 'text-slate-600'}`}>{t.title}</h4>
-                                                <p className="text-slate-400 text-sm leading-relaxed">{t.desc}</p>
-                                                {t.quiz && !completedTasks.includes(t.id) && <span className="inline-block mt-3 text-[9px] font-black uppercase bg-orange-100 text-orange-600 px-3 py-1 rounded-full tracking-widest">Test nötig</span>}
-                                            </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                                    {/* Spalte: Anwendung / Skills */}
+                                    <section>
+                                        <h3 className="text-2xl font-black mb-8 uppercase tracking-tighter flex items-center gap-3">
+                                            <Icon name="pen-tool" className="text-green-500" /> Skills
+                                        </h3>
+                                        <div className="space-y-6">
+                                            {curriculumData[activeStage].tasks.filter(t => t.category === "Anwendung").map(t => (
+                                                <div key={t.id} onClick={() => handleTaskClick(t)} className={`p-8 rounded-[2rem] border-2 cursor-pointer transition-all flex gap-6 items-start ${completedTasks.includes(t.id) ? 'border-blue-500 bg-white shadow-xl shadow-blue-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                                                    <Icon name={completedTasks.includes(t.id) ? "check-circle" : "circle"} className={completedTasks.includes(t.id) ? "text-blue-600" : "text-slate-200"} size={32} />
+                                                    <div className="flex-1">
+                                                        <h4 className={`font-black text-xl mb-1 ${completedTasks.includes(t.id) ? 'text-slate-800' : 'text-slate-600'}`}>{t.title}</h4>
+                                                        <p className="text-slate-400 text-sm leading-relaxed">{t.desc}</p>
+                                                        {t.quiz && !completedTasks.includes(t.id) && <span className="inline-block mt-3 text-[9px] font-black uppercase bg-orange-100 text-orange-600 px-3 py-1 rounded-full tracking-widest">Test nötig</span>}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    </section>
+
+                                    {/* Spalte: Umgang / Reflexion */}
+                                    <section>
+                                        <h3 className="text-2xl font-black mb-8 uppercase tracking-tighter flex items-center gap-3">
+                                            <Icon name="globe" className="text-blue-600" /> Reflexion
+                                        </h3>
+                                        <div className="space-y-6">
+                                            {curriculumData[activeStage].tasks.filter(t => t.category === "Umgang").map(t => (
+                                                <div key={t.id} onClick={() => handleTaskClick(t)} className={`p-8 rounded-[2rem] border-2 cursor-pointer transition-all flex gap-6 items-start ${completedTasks.includes(t.id) ? 'border-blue-500 bg-white shadow-xl shadow-blue-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                                                    <Icon name={completedTasks.includes(t.id) ? "check-circle" : "circle"} className={completedTasks.includes(t.id) ? "text-blue-600" : "text-slate-200"} size={32} />
+                                                    <div className="flex-1">
+                                                        <h4 className={`font-black text-xl mb-1 ${completedTasks.includes(t.id) ? 'text-slate-800' : 'text-slate-600'}`}>{t.title}</h4>
+                                                        <p className="text-slate-400 text-sm leading-relaxed">{t.desc}</p>
+                                                        {t.quiz && !completedTasks.includes(t.id) && <span className="inline-block mt-3 text-[9px] font-black uppercase bg-orange-100 text-orange-600 px-3 py-1 rounded-full tracking-widest">Test nötig</span>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
                                 </div>
                             </div>
                         )}
@@ -245,11 +310,51 @@
                         {viewMode === 'teacher' && (
                             <div className="animate-in fade-in">
                                 <h2 className="text-3xl font-black mb-8 tracking-tight uppercase">Klassenübersicht</h2>
-                                <div className="bg-white p-16 rounded-[2.5rem] border-4 border-dashed border-slate-100 text-center text-slate-300">
-                                    <Icon name="users" size={64} className="mx-auto mb-4 opacity-10" />
-                                    <p className="font-bold">Das Dashboard ist bereit.</p>
-                                    <p className="text-sm mt-2">Aktiviere Firestore, um Live-Daten zu sehen.</p>
-                                </div>
+                                {db ? (
+                                    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-slate-50 border-b">
+                                                <tr>
+                                                    <th className="p-6 text-xs uppercase font-black text-slate-400 tracking-widest">Schüler/in</th>
+                                                    <th className="p-6 text-xs uppercase font-black text-slate-400 tracking-widest">Fortschritt</th>
+                                                    <th className="p-6 text-xs uppercase font-black text-slate-400 tracking-widest text-right">Zuletzt Aktiv</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {allStudents.sort((a,b) => (b.progress || 0) - (a.progress || 0)).map(s => (
+                                                    <tr key={s.id} className="hover:bg-slate-50/50">
+                                                        <td className="p-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-bold uppercase">{s.userDetails?.charAt(0) || '?'}</div>
+                                                                <span className="font-bold text-slate-700">{s.userDetails || "Anonym"}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden min-w-[150px]">
+                                                                    <div className="bg-blue-600 h-full" style={{ width: `${s.progress || 0}%` }}></div>
+                                                                </div>
+                                                                <span className="font-black text-sm">{s.progress || 0}%</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-6 text-xs text-slate-400 font-medium italic text-right">
+                                                            {s.lastUpdated ? new Date(s.lastUpdated).toLocaleDateString() : '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {allStudents.length === 0 && (
+                                                    <tr><td colSpan="3" className="p-10 text-center text-slate-300 italic">Noch keine Daten vorhanden.</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white p-16 rounded-[2.5rem] border-4 border-dashed border-slate-100 text-center text-slate-300">
+                                        <Icon name="users" size={64} className="mx-auto mb-4 opacity-10" />
+                                        <p className="font-bold">Dashboard ist bereit.</p>
+                                        <p className="text-sm mt-2">Aktiviere Firebase, um Live-Daten zu sehen.</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </main>
