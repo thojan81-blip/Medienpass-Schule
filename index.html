@@ -35,7 +35,6 @@
         const { useState, useEffect, useMemo } = React;
         
         // --- FIREBASE CONFIG (Optional) ---
-        // Wenn Sie Cloud-Speicherung nutzen möchten, tragen Sie hier Ihre Daten ein.
         const firebaseConfig = {
             apiKey: "", 
             authDomain: "",
@@ -53,10 +52,31 @@
 
         const APP_VERSION = "v2-pro-final";
 
-        // Icon Komponente für Lucide
+        // Verbesserte Icon Komponente für maximale Zuverlässigkeit
         const Icon = ({ name, size = 24, className = "" }) => {
-            useEffect(() => { if (window.lucide) lucide.createIcons(); }, [name]);
-            return <i data-lucide={name} className={className} style={{ width: size, height: size, display: 'inline-block' }}></i>;
+            const [svgHtml, setSvgHtml] = useState("");
+
+            useEffect(() => {
+                if (window.lucide && window.lucide.icons && window.lucide.icons[name]) {
+                    const svg = window.lucide.icons[name].toSvg({
+                        width: size,
+                        height: size,
+                        class: className,
+                        'stroke-width': 2.5
+                    });
+                    setSvgHtml(svg);
+                } else {
+                    // Fallback falls Lucide noch lädt
+                    const timer = setTimeout(() => {
+                        if (window.lucide && window.lucide.icons && window.lucide.icons[name]) {
+                            setSvgHtml(window.lucide.icons[name].toSvg({ width: size, height: size, class: className }));
+                        }
+                    }, 100);
+                    return () => clearTimeout(timer);
+                }
+            }, [name, size, className]);
+
+            return <span className="inline-flex" dangerouslySetInnerHTML={{ __html: svgHtml }} />;
         };
 
         const curriculumData = {
@@ -65,50 +85,45 @@
                 tasks: [
                     { id: 1, category: "Anwendung", title: "Hardware-Führerschein", desc: "Bedienung von Maus, Tastatur und Kamera.", quiz: [
                         { q: "Wie fährst du einen Computer sicher herunter?", a: ["Stecker ziehen", "Start-Menü -> Ein/Aus -> Herunterfahren", "Bildschirm ausschalten"], correct: 1 },
-                        { q: "Wofür nutzt man meistens die rechte Maustaste?", a: ["Um Programme zu löschen", "Um ein Kontextmenü (Optionen) zu öffnen", "Zum Doppelklicken"], correct: 1 }
+                        { q: "Wofür nutzt man meistens die rechte Maustaste?", a: ["Um Programme zu löschen", "Um ein Kontextmenü zu öffnen", "Zum Doppelklicken"], correct: 1 }
                     ]},
                     { id: 2, category: "Anwendung", title: "Dateimanagement", desc: "Ordnerhierarchien verstehen und Cloud nutzen.", quiz: [
-                        { q: "Warum sollte man Dateien in Ordnern sortieren?", a: ["Damit der PC schneller wird", "Um sie später schneller wiederzufinden", "Damit sie nicht gelöscht werden"], correct: 1 },
-                        { q: "Welcher Dateiname ist am sinnvollsten für ein Referat?", a: ["dokument1.pdf", "2024_Bio_Referat_Max.pdf", "Unbenannt.pdf"], correct: 1 }
+                        { q: "Warum sollte man Dateien in Ordnern sortieren?", a: ["Damit der PC schneller wird", "Um sie schneller wiederzufinden", "Gegen Viren"], correct: 1 }
                     ]},
-                    { id: 3, category: "Anwendung", title: "Textverarbeitung I", desc: "Grundfunktionen (Formatierung) und PDF-Export.", quiz: [
-                        { q: "Wie macht man eine Überschrift 'fett'?", a: ["Text markieren und auf 'B' oder 'F' klicken", "Den Text ganz groß schreiben", "Den Text unterstreichen"], correct: 0 },
-                        { q: "Was ist der größte Vorteil einer PDF-Datei?", a: ["Sie braucht keinen Speicherplatz", "Sie sieht auf jedem Gerät gleich aus", "Man kann sie nicht ausdrucken"], correct: 1 }
+                    { id: 3, category: "Anwendung", title: "Textverarbeitung I", desc: "Grundfunktionen und PDF-Export.", quiz: [
+                        { q: "Wie macht man eine Überschrift 'fett'?", a: ["Text markieren und 'B' klicken", "Ganz groß schreiben", "Unterstreichen"], correct: 0 }
                     ]},
-                    { id: 4, category: "Umgang", title: "Netiquette", desc: "Regeln für den Klassenchat und Online-Empathie.", quiz: [
-                        { q: "Was bedeutet es, wenn man NUR IN GROSSBUCHSTABEN schreibt?", a: ["Man ist besonders schlau", "Man schreit sein Gegenüber an", "Die Tastatur ist kaputt"], correct: 1 },
-                        { q: "Darf man Fotos von Mitschülern ungefragt posten?", a: ["Ja, wenn es lustig ist", "Nein, das verletzt das Recht am eigenen Bild", "Nur in privaten Gruppen"], correct: 1 }
+                    { id: 4, category: "Umgang", title: "Netiquette", desc: "Regeln für den Klassenchat.", quiz: [
+                        { q: "Was bedeutet SCHREIBEN IN GROSSBUCHSTABEN?", a: ["Ich bin schlau", "Ich schreie", "Tastatur kaputt"], correct: 1 }
                     ]},
                     { id: 5, category: "Umgang", title: "Cybermobbing-Schutz", desc: "Grenzen erkennen und Hilfe finden.", quiz: [
-                        { q: "Was ist der erste Schritt, wenn man online beleidigt wird?", a: ["Gleich zurückbeleidigen", "Einen Screenshot als Beweis machen", "Den Computer wegwerfen"], correct: 1 },
-                        { q: "Wen sollte man bei Online-Problemen um Hilfe bitten?", a: ["Niemanden", "Vertrauenspersonen (Eltern/Lehrer)", "Fremde im Chat"], correct: 1 }
+                        { q: "Erster Schritt bei Beleidigungen?", a: ["Zurückbeleidigen", "Screenshot machen", "PC wegwerfen"], correct: 1 }
                     ]},
-                    { id: 6, category: "Umgang", title: "Suchmaschinen", desc: "Nutzung von sicheren Kindersuchmaschinen.", quiz: [
-                        { q: "Welche Suchmaschine ist speziell für Kinder?", a: ["FragFinn.de", "Amazon.de", "Google Bilder"], correct: 0 },
-                        { q: "Was passiert bei zu vielen Wörtern in der Suche?", a: ["Der PC stürzt ab", "Man bekommt oft weniger passende Ergebnisse", "Man bekommt mehr Geschenke"], correct: 1 }
+                    { id: 6, category: "Umgang", title: "Suchmaschinen", desc: "Nutzung von Kindersuchmaschinen.", quiz: [
+                        { q: "Welche Suche ist für Kinder?", a: ["FragFinn.de", "Amazon.de", "Google Bilder"], correct: 0 }
                     ]}
                 ]
             },
             "7-8": {
                 title: "Aufbau-Stufe",
                 tasks: [
-                    { id: 7, category: "Anwendung", title: "Präsentationsprofi", desc: "Foliendesign, Medieneinbettung und Vortrag." },
-                    { id: 8, category: "Anwendung", title: "Medienproduktion", desc: "Grundlagen des Video- und Bildschnitts." },
-                    { id: 9, category: "Anwendung", title: "Tabellenkalkulation", desc: "Daten erheben und visuell aufbereiten." },
-                    { id: 10, category: "Umgang", title: "Urheberrecht", desc: "Fair Use, CC-Lizenzen und Bildrechte." },
-                    { id: 11, category: "Umgang", title: "Quellenkritik", desc: "Mechanismen von Fake News erkennen." },
-                    { id: 12, category: "Umgang", title: "Datenschutz", desc: "Tracker und Profilbildung verstehen." }
+                    { id: 7, category: "Anwendung", title: "Präsentationsprofi", desc: "Foliendesign und Medieneinbettung." },
+                    { id: 8, category: "Anwendung", title: "Medienproduktion", desc: "Grundlagen Video- und Bildschnitt." },
+                    { id: 9, category: "Anwendung", title: "Tabellenkalkulation", desc: "Daten grafisch aufbereiten." },
+                    { id: 10, category: "Umgang", title: "Urheberrecht", desc: "Fair Use und Creative Commons." },
+                    { id: 11, category: "Umgang", title: "Quellenkritik", desc: "Fake News Mechanismen erkennen." },
+                    { id: 12, category: "Umgang", title: "Datenschutz", desc: "Tracker und Social Media Profile." }
                 ]
             },
             "9-10": {
                 title: "Profi-Stufe",
                 tasks: [
                     { id: 13, category: "Anwendung", title: "KI-Produktivität", desc: "Effektives Prompting und Reflexion." },
-                    { id: 14, category: "Anwendung", title: "Digitale Bewerbung", desc: "E-Portfolio und professionelle Profile." },
-                    { id: 15, category: "Anwendung", title: "Projektmanagement", desc: "Kollaboratives Arbeiten (Agile Methoden)." },
+                    { id: 14, category: "Anwendung", title: "Digitale Bewerbung", desc: "E-Portfolio und Profile." },
+                    { id: 15, category: "Anwendung", title: "Projektmanagement", desc: "Kollaboratives Arbeiten (Agile)." },
                     { id: 16, category: "Umgang", title: "KI-Ethik", desc: "Verantwortung von Algorithmen." },
                     { id: 17, category: "Umgang", title: "Zivilcourage", desc: "Umgang mit Hate Speech im Netz." },
-                    { id: 18, category: "Umgang", title: "Digitaler Fußabdruck", desc: "Reflexion der eigenen digitalen Biografie." }
+                    { id: 18, category: "Umgang", title: "Digitaler Fußabdruck", desc: "Eigene Biografie reflektieren." }
                 ]
             }
         };
@@ -123,19 +138,15 @@
             const [quizError, setQuizError] = useState(false);
             const [teacherCode, setTeacherCode] = useState("");
 
-            // Laden der Daten beim Start
             useEffect(() => {
-                // 1. Lokalen Fortschritt laden
                 const saved = localStorage.getItem(`medienpass_progress_${APP_VERSION}`);
                 if (saved) setCompletedTasks(JSON.parse(saved));
 
-                // 2. Azure Authentifizierung prüfen
                 fetch('/.auth/me').then(res => res.json()).then(data => {
                     if (data.clientPrincipal) setMsUser(data.clientPrincipal);
                 }).catch(() => {});
             }, []);
 
-            // Synchronisation mit Cloud (falls aktiv)
             useEffect(() => {
                 if (db && msUser.userId !== 'local-user') {
                     db.doc(`medienpass/${APP_VERSION}/users/${msUser.userId}`).get().then(doc => {
@@ -184,10 +195,9 @@
 
             return (
                 <div className="flex flex-col min-h-screen">
-                    {/* Navigation */}
                     <header className="bg-white border-b px-6 h-20 flex items-center justify-between shadow-sm sticky top-0 z-40">
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setViewMode('student')}>
-                            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-100">
+                            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg">
                                 <Icon name="shield-check" size={28} />
                             </div>
                             <div>
@@ -196,21 +206,13 @@
                             </div>
                         </div>
                         <div className="flex items-center gap-6">
-                            <button 
-                                onClick={() => setViewMode(viewMode === 'teacher' ? 'student' : 'teacher-auth')} 
-                                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
-                            >
+                            <button onClick={() => setViewMode(viewMode === 'teacher' ? 'student' : 'teacher-auth')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">
                                 {viewMode === 'teacher' ? 'Zurück' : 'Lehrer-Bereich'}
                             </button>
                             <div className="h-8 w-px bg-slate-100"></div>
-                            <div className="flex items-center gap-2">
-                                <div className="text-right hidden sm:block">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Nutzer</p>
-                                    <p className="text-xs font-black text-slate-700">{msUser.userDetails.split(' ')[0]}</p>
-                                </div>
-                                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
-                                    <Icon name="user" size={20} />
-                                </div>
+                            <div className="flex items-center gap-2 text-xs font-black text-slate-700">
+                                <Icon name="user" size={18} className="text-slate-300" />
+                                {msUser.userDetails.split(' ')[0]}
                             </div>
                         </div>
                     </header>
@@ -218,7 +220,6 @@
                     <main className="flex-grow max-w-6xl mx-auto w-full p-6 sm:p-10">
                         {viewMode === 'student' && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                {/* Hero Progress */}
                                 <div className="bg-slate-900 rounded-[3rem] p-8 sm:p-12 text-white shadow-2xl mb-12 relative overflow-hidden">
                                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                                         <div>
@@ -238,67 +239,47 @@
                                     <Icon name="award" size={400} className="absolute -right-20 -bottom-20 opacity-5" />
                                 </div>
 
-                                {/* Grade Selector */}
                                 <div className="flex gap-2 mb-12 overflow-x-auto pb-4 scrollbar-hide no-print">
                                     {Object.keys(curriculumData).map(k => (
-                                        <button 
-                                            key={k} 
-                                            onClick={() => setActiveStage(k)} 
-                                            className={`px-10 py-5 rounded-[2rem] font-black transition-all whitespace-nowrap ${activeStage === k ? 'bg-blue-600 text-white shadow-xl scale-105' : 'bg-white text-slate-400 hover:bg-slate-100'}`}
-                                        >
+                                        <button key={k} onClick={() => setActiveStage(k)} className={`px-10 py-5 rounded-[2rem] font-black transition-all whitespace-nowrap ${activeStage === k ? 'bg-blue-600 text-white shadow-xl scale-105' : 'bg-white text-slate-400 hover:bg-slate-100'}`}>
                                             KLASSE {k}
                                         </button>
                                     ))}
                                 </div>
 
-                                {/* Task Grid */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                                    {/* Säule: Anwendung */}
                                     <section>
-                                        <div className="flex items-center gap-4 mb-8">
-                                            <div className="bg-green-100 p-2 rounded-xl text-green-600"><Icon name="pen-tool" /></div>
-                                            <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-800">Skills (Anwendung)</h3>
-                                        </div>
+                                        <h3 className="text-2xl font-black mb-8 uppercase tracking-tighter flex items-center gap-3">
+                                            <Icon name="pen-tool" className="text-green-500" /> Skills (Anwendung)
+                                        </h3>
                                         <div className="space-y-6">
                                             {curriculumData[activeStage].tasks.filter(t => t.category === "Anwendung").map(t => (
-                                                <div 
-                                                    key={t.id} 
-                                                    onClick={() => t.quiz && !completedTasks.includes(t.id) ? (setActiveQuiz(t), setQuizStep(0), setQuizError(false)) : toggleTask(t.id)} 
-                                                    className={`p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all flex gap-6 card-skill ${completedTasks.includes(t.id) ? 'border-blue-500 bg-white shadow-xl shadow-blue-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}
-                                                >
+                                                <div key={t.id} onClick={() => t.quiz && !completedTasks.includes(t.id) ? (setActiveQuiz(t), setQuizStep(0), setQuizError(false)) : toggleTask(t.id)} className={`p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all flex gap-6 card-skill ${completedTasks.includes(t.id) ? 'border-blue-500 bg-white shadow-xl shadow-blue-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
                                                     <div className={completedTasks.includes(t.id) ? 'text-blue-600' : 'text-slate-200'}>
                                                         <Icon name={completedTasks.includes(t.id) ? "check-circle" : "circle"} size={36} />
                                                     </div>
                                                     <div className="flex-1">
                                                         <h4 className={`font-black text-xl mb-1 ${completedTasks.includes(t.id) ? 'text-slate-900' : 'text-slate-600'}`}>{t.title}</h4>
-                                                        <p className="text-slate-400 text-sm leading-relaxed font-medium">{t.desc}</p>
-                                                        {t.quiz && !completedTasks.includes(t.id) && <span className="inline-block mt-3 text-[9px] font-black uppercase bg-orange-100 text-orange-600 px-3 py-1 rounded-full tracking-widest">Test nötig</span>}
+                                                        <p className="text-slate-400 text-sm font-medium leading-relaxed">{t.desc}</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </section>
 
-                                    {/* Säule: Umgang */}
                                     <section>
-                                        <div className="flex items-center gap-4 mb-8">
-                                            <div className="bg-blue-100 p-2 rounded-xl text-blue-600"><Icon name="globe" /></div>
-                                            <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-800">Reflexion (Umgang)</h3>
-                                        </div>
+                                        <h3 className="text-2xl font-black mb-8 uppercase tracking-tighter flex items-center gap-3">
+                                            <Icon name="globe" className="text-blue-600" /> Reflexion (Umgang)
+                                        </h3>
                                         <div className="space-y-6">
                                             {curriculumData[activeStage].tasks.filter(t => t.category === "Umgang").map(t => (
-                                                <div 
-                                                    key={t.id} 
-                                                    onClick={() => t.quiz && !completedTasks.includes(t.id) ? (setActiveQuiz(t), setQuizStep(0), setQuizError(false)) : toggleTask(t.id)} 
-                                                    className={`p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all flex gap-6 card-reflexion ${completedTasks.includes(t.id) ? 'border-blue-500 bg-white shadow-xl shadow-blue-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}
-                                                >
+                                                <div key={t.id} onClick={() => t.quiz && !completedTasks.includes(t.id) ? (setActiveQuiz(t), setQuizStep(0), setQuizError(false)) : toggleTask(t.id)} className={`p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all flex gap-6 card-reflexion ${completedTasks.includes(t.id) ? 'border-blue-500 bg-white shadow-xl shadow-blue-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
                                                     <div className={completedTasks.includes(t.id) ? 'text-blue-600' : 'text-slate-200'}>
                                                         <Icon name={completedTasks.includes(t.id) ? "check-circle" : "circle"} size={36} />
                                                     </div>
                                                     <div className="flex-1">
                                                         <h4 className={`font-black text-xl mb-1 ${completedTasks.includes(t.id) ? 'text-slate-900' : 'text-slate-600'}`}>{t.title}</h4>
-                                                        <p className="text-slate-400 text-sm leading-relaxed font-medium">{t.desc}</p>
-                                                        {t.quiz && !completedTasks.includes(t.id) && <span className="inline-block mt-3 text-[9px] font-black uppercase bg-orange-100 text-orange-600 px-3 py-1 rounded-full tracking-widest">Test nötig</span>}
+                                                        <p className="text-slate-400 text-sm font-medium leading-relaxed">{t.desc}</p>
                                                     </div>
                                                 </div>
                                             ))}
@@ -311,89 +292,37 @@
                         {viewMode === 'teacher-auth' && (
                             <div className="max-w-md mx-auto mt-20 bg-white p-12 rounded-[3rem] shadow-2xl text-center border">
                                 <Icon name="lock" size={48} className="mx-auto mb-6 text-slate-300" />
-                                <h2 className="text-3xl font-black mb-6 tracking-tight">Lehrer-Bereich</h2>
-                                <p className="text-slate-400 mb-8 font-medium">Geben Sie den Schul-Code ein, um Fortschritte einzusehen.</p>
-                                <input 
-                                    type="password" 
-                                    placeholder="Passwort..." 
-                                    className="w-full bg-slate-50 border-2 rounded-2xl p-5 mb-4 text-center font-bold outline-none focus:border-blue-600 transition-all" 
-                                    onChange={e => setTeacherCode(e.target.value)} 
-                                />
-                                <button 
-                                    onClick={() => teacherCode === "Lehrer2026" ? setViewMode('teacher') : alert("Code ungültig")} 
-                                    className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black hover:bg-black transition-all shadow-xl"
-                                >
-                                    Anmelden
-                                </button>
+                                <h2 className="text-3xl font-black mb-6">Lehrer-Bereich</h2>
+                                <input type="password" placeholder="Passwort..." className="w-full bg-slate-50 border-2 rounded-2xl p-5 mb-4 text-center font-bold outline-none focus:border-blue-600 transition-all" onChange={e => setTeacherCode(e.target.value)} />
+                                <button onClick={() => teacherCode === "Lehrer2026" ? setViewMode('teacher') : alert("Code ungültig")} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black shadow-xl">Anmelden</button>
                             </div>
                         )}
                         
                         {viewMode === 'teacher' && (
-                            <div className="animate-in fade-in">
-                                <div className="flex justify-between items-end mb-12">
-                                    <div>
-                                        <h2 className="text-4xl font-black tracking-tighter uppercase text-slate-800">Klassenübersicht</h2>
-                                        <p className="text-slate-400 font-medium">Zentrale Überwachung der Kompetenzentwicklung.</p>
-                                    </div>
-                                    <button onClick={() => window.print()} className="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-200 transition-all">
-                                        <Icon name="printer" size={18} /> Drucken
-                                    </button>
-                                </div>
-                                <div className="bg-white p-16 rounded-[3rem] border-4 border-dashed border-slate-100 text-center text-slate-300 italic">
-                                    <Icon name="database" size={64} className="mx-auto mb-6 opacity-20" />
-                                    <p className="text-xl font-bold mb-2">Die Datenbank wartet.</p>
-                                    <p className="text-sm">Um echte Schülerdaten hier live zu sehen, muss Firebase in den Code-Einstellungen (index.html) aktiviert werden.</p>
-                                </div>
+                            <div className="animate-in fade-in text-center py-20">
+                                <Icon name="database" size={64} className="mx-auto mb-6 text-slate-200" />
+                                <h2 className="text-2xl font-black text-slate-400 italic">Dashboard bereit für Firebase.</h2>
                             </div>
                         )}
                     </main>
 
-                    {/* Quiz Modal */}
                     {activeQuiz && (
                         <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-[4rem] p-10 sm:p-16 max-w-2xl w-full shadow-2xl quiz-modal-enter relative">
-                                <button onClick={() => setActiveQuiz(null)} className="absolute top-10 right-10 text-slate-300 hover:text-slate-900 transition-colors">
-                                    <Icon name="x" size={32} />
-                                </button>
-                                <div className="mb-10">
-                                    <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-5 py-2 rounded-full mb-6 inline-block tracking-[0.2em]">Modulprüfung</span>
-                                    <h3 className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">{activeQuiz.quiz[quizStep].q}</h3>
-                                </div>
+                                <button onClick={() => setActiveQuiz(null)} className="absolute top-10 right-10 text-slate-300 hover:text-slate-900"><Icon name="x" size={32} /></button>
+                                <h3 className="text-3xl font-black text-slate-900 mb-10">{activeQuiz.quiz[quizStep].q}</h3>
                                 <div className="space-y-4 mb-10">
                                     {activeQuiz.quiz[quizStep].a.map((ans, i) => (
-                                        <button 
-                                            key={i} 
-                                            onClick={() => handleQuizAnswer(i)} 
-                                            className="w-full text-left p-6 rounded-3xl border-2 border-slate-50 hover:border-blue-500 hover:bg-blue-50 font-bold transition-all text-slate-700 flex justify-between items-center group"
-                                        >
-                                            <span className="text-lg">{ans}</span>
-                                            <Icon name="chevron-right" size={24} className="opacity-0 group-hover:opacity-100 text-blue-600 transition-all -translate-x-4 group-hover:translate-x-0" />
+                                        <button key={i} onClick={() => handleQuizAnswer(i)} className="w-full text-left p-6 rounded-3xl border-2 border-slate-50 hover:border-blue-500 hover:bg-blue-50 font-bold transition-all text-slate-700 flex justify-between items-center group">
+                                            <span>{ans}</span>
+                                            <Icon name="chevron-right" size={24} className="opacity-0 group-hover:opacity-100 text-blue-600 transition-all" />
                                         </button>
                                     ))}
                                 </div>
-                                {quizError && (
-                                    <div className="bg-red-50 text-red-500 font-bold p-6 rounded-3xl flex items-center gap-4 animate-bounce mb-6">
-                                        <Icon name="alert-circle" size={28} />
-                                        <p>Das war leider nicht richtig. Überleg noch einmal!</p>
-                                    </div>
-                                )}
-                                <div className="flex justify-between items-center">
-                                    <div className="text-xs font-black text-slate-300 uppercase tracking-widest">
-                                        Frage {quizStep + 1} von {activeQuiz.quiz.length}
-                                    </div>
-                                    <div className="flex gap-1.5">
-                                        {activeQuiz.quiz.map((_, i) => (
-                                            <div key={i} className={`h-2 w-12 rounded-full transition-all duration-500 ${i <= quizStep ? 'bg-blue-600' : 'bg-slate-100'}`}></div>
-                                        ))}
-                                    </div>
-                                </div>
+                                {quizError && <div className="bg-red-50 text-red-500 font-bold p-6 rounded-3xl animate-bounce mb-6 text-center">Leider falsch. Probier es nochmal!</div>}
                             </div>
                         </div>
                     )}
-
-                    <footer className="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest no-print">
-                        &copy; 2026 Digitaler Medienpass | Version {APP_VERSION}
-                    </footer>
                 </div>
             );
         };
